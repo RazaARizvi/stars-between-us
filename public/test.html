@@ -1,0 +1,22 @@
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/socket.io/socket.io.js"></script>
+<button onclick="send()" style="font-size:32px;padding:20px">Add random star</button>
+<pre id="log"></pre>
+<script>
+  const socket = io();
+  let keys = [];
+  const log = (t) => (document.getElementById('log').textContent += t + '\n');
+
+  fetch('/api/colours').then((r) => r.json()).then((c) => {
+    keys = Array.isArray(c) ? c.map((x) => x.key) : Object.keys(c);
+    log('colour keys: ' + keys.join(', '));
+  });
+
+  socket.on('stars:init', (s) => log('init: ' + s.length + ' stars'));
+  socket.on('star:added', (s) => log('added: ' + JSON.stringify(s)));
+
+  function send() {
+    const pick = () => keys[Math.floor(Math.random() * keys.length)];
+    socket.emit('star:add', { colours: [pick(), pick()], x: Math.random(), y: Math.random() });
+  }
+</script>
