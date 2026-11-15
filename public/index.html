@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#292d35">
+<title>Stars Between Us</title>
+<style>
+:root{--base:#292d35;--dark:#1c1f25;--light:#353a44;--accent:#4da3ff;--text:#dfe6f2;--dim:#8a93a6;
+  --raised:5px 5px 12px var(--dark),-5px -5px 12px var(--light);
+  --pressed:inset 4px 4px 9px var(--dark),inset -4px -4px 9px var(--light)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none;touch-action:manipulation}
+body{position:fixed;inset:0;width:100%;background:var(--base);color:var(--text);
+  font-family:"DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+[hidden]{display:none!important}
+main{position:absolute;inset:0;display:flex;flex-direction:column;gap:2.4vmin;
+  padding:max(3vmin,env(safe-area-inset-top)) max(3vmin,env(safe-area-inset-right)) max(3vmin,env(safe-area-inset-bottom)) max(3vmin,env(safe-area-inset-left))}
+h1{margin:0;font-size:clamp(24px,4vmin,40px);font-weight:500}
+p{margin:.2em 0 0;color:var(--dim);font-size:clamp(16px,2.4vmin,22px)}
+button,a.btn{border:0;border-radius:24px;background:var(--base);color:var(--text);box-shadow:var(--raised);
+  font:inherit;font-size:clamp(20px,3vmin,28px);font-weight:500;min-height:84px;min-width:150px;padding:12px 28px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;touch-action:manipulation}
+button:active,a.btn:active{box-shadow:var(--pressed)}
+button:disabled{opacity:.38}
+small{font-size:.6em;color:var(--dim);font-weight:400}
+.go{color:var(--accent)}
+#chooser{align-items:center;justify-content:center;text-align:center}
+#chooser .row{display:flex;gap:3vmin;margin-top:3vmin}
+#chosen{display:flex;gap:14px;align-items:center;min-height:40px}
+.slot{width:36px;height:36px;border-radius:50%;box-shadow:var(--pressed);display:block}
+.slot.f{background:var(--c);box-shadow:0 0 14px var(--c)}
+#grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(100px,1fr);gap:2.4vmin}
+@media (orientation:portrait){#grid{grid-template-columns:repeat(2,1fr)}}
+.c{position:relative;flex-direction:row;justify-content:flex-start;gap:2.4vmin;padding-left:3vmin;min-width:0;height:100%}
+.sw{flex:none;width:clamp(44px,7vmin,68px);aspect-ratio:1;border-radius:50%;background:var(--c);box-shadow:0 0 16px var(--c)}
+.t{display:flex;flex-direction:column;align-items:flex-start;text-align:left}
+.c.on{box-shadow:var(--pressed),inset 0 0 0 3px var(--c)}
+.n{position:absolute;top:10px;right:16px;font-style:normal;font-weight:700;font-size:22px;color:var(--c)}
+footer{display:flex;gap:2.4vmin}
+footer button{flex:1}
+footer .go{flex:1.5}
+#sky{position:fixed;inset:14px;width:calc(100% - 28px);height:calc(100% - 28px);border-radius:28px;background:#05060b;
+  touch-action:none;box-shadow:6px 6px 16px var(--dark),-6px -6px 16px var(--light);z-index:1}
+body[data-mode=screen] #sky{inset:0;width:100%;height:100%;border-radius:0;box-shadow:none;cursor:none}
+#placebar{position:fixed;left:0;right:0;bottom:0;z-index:3;display:flex;justify-content:space-between;gap:2vmin;pointer-events:none;
+  padding:3vmin max(4vmin,env(safe-area-inset-right)) max(4vmin,env(safe-area-inset-bottom)) max(4vmin,env(safe-area-inset-left))}
+#placebar button{pointer-events:auto}
+#hint{position:fixed;top:max(30px,env(safe-area-inset-top));left:0;right:0;z-index:3;text-align:center;pointer-events:none;
+  color:rgba(223,230,242,.75);font-size:clamp(18px,2.6vmin,26px);text-shadow:0 1px 8px #000}
+#done{position:fixed;inset:0;z-index:5;display:grid;place-items:center;text-align:center;background:rgba(5,6,11,.55)}
+#done h1{font-size:clamp(28px,5vmin,52px)}
+#net{position:fixed;top:18px;right:22px;z-index:6;padding:8px 16px;border-radius:999px;background:rgba(41,45,53,.88);color:#ff9a8f;font-size:15px}
+#count{position:fixed;left:26px;bottom:22px;z-index:2;color:rgba(223,230,242,.45);font-size:16px;pointer-events:none}
+#empty{position:fixed;left:0;right:0;bottom:12vh;z-index:2;text-align:center;pointer-events:none}
+#empty h1{font-weight:300;letter-spacing:.04em;color:rgba(190,205,235,.6)}
+</style>
+</head>
+<body>
+
+<main id="chooser" hidden>
+  <h1>Stars Between Us</h1>
+  <div class="row">
+    <a class="btn go" href="?mode=ipad">iPad<small>Stern setzen / place a star</small></a>
+    <a class="btn go" href="?mode=screen">Screen<small>Himmel zeigen / show the sky</small></a>
+  </div>
+</main>
+
+<main id="step1" hidden>
+  <header>
+    <h1>Welche Farben sind in eurem Stern?</h1>
+    <p>Which colours are in your star? Tap up to four.</p>
+  </header>
+  <div id="chosen"></div>
+  <div id="grid"></div>
+  <footer>
+    <button id="undo" type="button">Rückgängig<small>Undo</small></button>
+    <button id="clear" type="button">Leeren<small>Clear</small></button>
+    <button id="next" type="button" class="go">Weiter<small>Next</small></button>
+  </footer>
+</main>
+
+<canvas id="sky" hidden></canvas>
+<div id="hint" hidden>Tippt in den Himmel und zieht den Stern an seinen Platz.<br><small>Tap the sky and drag your star into place.</small></div>
+<div id="placebar" hidden>
+  <button id="back" type="button">Zurück<small>Back</small></button>
+  <button id="place" type="button" class="go">Stern setzen<small>Place star</small></button>
+</div>
+<div id="done" hidden><div><h1>Euer Stern ist am Himmel.</h1><p>Your star is in the sky.</p></div></div>
+<div id="net" hidden>Offline</div>
+<div id="count" hidden></div>
+<div id="empty" hidden><h1>Der Himmel wartet auf den ersten Stern.</h1><p>The sky is waiting for its first star.</p></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const MODE = new URLSearchParams(location.search).get('mode');
+  const MAX_STARS = 120;   // screen mode: stars beyond the newest N fade and shrink
+  const MAX_PICK = 4;      // colours per star
+  // PLACEHOLDERS: shown only while the sky has no real stars yet
+  const EXAMPLE_STARS = [
+    { id: 'e1', colours: ['blue', 'purple'], x: .28, y: .34 },
+    { id: 'e2', colours: ['yellow'], x: .46, y: .52 },
+    { id: 'e3', colours: ['green', 'orange', 'red'], x: .63, y: .30 },
+    { id: 'e4', colours: ['red', 'yellow'], x: .74, y: .62 },
+    { id: 'e5', colours: ['purple', 'blue', 'green'], x: .40, y: .74 },
+  ].map(s => ({ ...s, t0: -1e9 }));
+
+  let HEX = {}, stars = [], picked = [], prev = { x: .5, y: .5 };
+  let placed = false, sending = false, W = 0, H = 0;
+  document.body.dataset.mode = MODE || '';
+  const sky = $('sky'), ctx = sky.getContext('2d');
+  const socket = io();
+
+  // ---------- helpers ----------
+  const hash = s => { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) | 0; return Math.abs(h); };
+  const rgbCache = {};
+  const hexA = (h, a) => {
+    const k = rgbCache[h] || (rgbCache[h] = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)));
+    return 'rgba(' + k[0] + ',' + k[1] + ',' + k[2] + ',' + a + ')';
+  };
+  const SPECKS = Array.from({ length: 70 }, (_, i) => ({
+    x: (hash('a' + i) % 1000) / 1000, y: (hash('b' + i) % 1000) / 1000,
+    r: .4 + (hash('c' + i) % 10) / 10, a: .12 + (hash('d' + i) % 30) / 100 }));
+
+  // ---------- the ONE place a star is drawn (swap the look here later) ----------
+  // Look: glowing orb, one ring per chosen colour (first colour = outer ring).
+  function drawStar(c, s, x, y, r, t, a, grow) {
+    const n = s.colours.length, ph = hash(s.id || 'x') % 1000;
+    r *= grow * (1 + .05 * Math.sin(t / 800 + ph));
+    if (r < 1) return;
+    const c0 = HEX[s.colours[0]] || '#ffffff';
+    const g = c.createRadialGradient(x, y, 0, x, y, r * 3.2);
+    g.addColorStop(0, hexA(c0, .35 * a)); g.addColorStop(1, hexA(c0, 0));
+    c.fillStyle = g; c.beginPath(); c.arc(x, y, r * 3.2, 0, 6.283); c.fill();
+    for (let i = 0; i < n; i++) {
+      const col = HEX[s.colours[i]] || '#ffffff';
+      c.beginPath(); c.arc(x, y, r * (n - i) / n, 0, 6.283);
+      c.fillStyle = hexA(col, .16 * a); c.fill();
+      c.lineWidth = Math.max(1.5, r * .14); c.strokeStyle = hexA(col, .95 * a); c.stroke();
+    }
+    c.beginPath(); c.arc(x, y, r * .2, 0, 6.283); c.fillStyle = 'rgba(255,255,255,' + .95 * a + ')'; c.fill();
+  }
+
+  // ---------- sky canvas ----------
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2), r = sky.getBoundingClientRect();
+    W = r.width; H = r.height;
+    sky.width = Math.round(W * dpr); sky.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  addEventListener('resize', resize);
+  addEventListener('orientationchange', () => setTimeout(resize, 250));
+
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (sky.hidden || !W) return;
+    const R = Math.max(11, Math.min(W, H) * (MODE === 'screen' ? .03 : .024));
+    ctx.fillStyle = '#05060b'; ctx.fillRect(0, 0, W, H);
+    for (const s of SPECKS) { ctx.fillStyle = 'rgba(200,215,255,' + s.a + ')'; ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r, 0, 6.283); ctx.fill(); }
+    const list = stars.length ? stars : EXAMPLE_STARS, n = list.length;
+    const pts = list.map((s, i) => {
+      const over = Math.max(0, (n - 1 - i) - MAX_STARS + 1);
+      return { s, x: s.x * W, y: s.y * H, a: Math.max(.3, 1 - over * .02), k: Math.max(.6, 1 - over * .01), p: Math.min(1, (now - s.t0) / 1400) };
+    });
+    const L = Math.min(W, H) * .24;
+    ctx.lineWidth = 1;
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+      const d = Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y);
+      if (d < L) {
+        ctx.strokeStyle = 'rgba(180,200,255,' + .22 * (1 - d / L) * Math.min(pts[i].a, pts[j].a, pts[i].p, pts[j].p) + ')';
+        ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y); ctx.stroke();
+      }
+    }
+    for (const q of pts) {
+      drawStar(ctx, q.s, q.x, q.y, R * q.k, now, q.a, 1 - Math.pow(1 - q.p, 3));
+      if (q.p < 1) { // short flash when a star arrives
+        ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,' + (1 - q.p) * .5 + ')';
+        ctx.beginPath(); ctx.arc(q.x, q.y, R * (1 + (1 - q.p) * 3), 0, 6.283); ctx.stroke();
+      }
+    }
+    if (MODE === 'ipad' && !placed && picked.length) { // preview of the star being placed
+      const px = prev.x * W, py = prev.y * H;
+      ctx.lineWidth = 1.5;
+      for (const q of pts) {
+        const d = Math.hypot(q.x - px, q.y - py);
+        if (d < L) { ctx.strokeStyle = 'rgba(180,200,255,' + .4 * (1 - d / L) + ')'; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(q.x, q.y); ctx.stroke(); }
+      }
+      ctx.setLineDash([6, 8]); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(223,230,242,.5)';
+      ctx.beginPath(); ctx.arc(px, py, R * 2.2, 0, 6.283); ctx.stroke(); ctx.setLineDash([]);
+      drawStar(ctx, { id: 'preview', colours: picked }, px, py, R * 1.4, now, 1, 1);
+    }
+  }
+
+  // ---------- iPad: step 1, choose colours ----------
+  function renderPick() {
+    const cnt = {}; picked.forEach(k => cnt[k] = (cnt[k] || 0) + 1);
+    $('grid').querySelectorAll('.c').forEach(b => {
+      const m = cnt[b.dataset.k] || 0;
+      b.classList.toggle('on', m > 0); b.querySelector('.n').textContent = m || '';
+    });
+    $('chosen').innerHTML = '';
+    for (let i = 0; i < MAX_PICK; i++) {
+      const d = document.createElement('i'); d.className = 'slot';
+      if (picked[i]) { d.classList.add('f'); d.style.setProperty('--c', HEX[picked[i]]); }
+      $('chosen').appendChild(d);
+    }
+    $('next').disabled = $('undo').disabled = $('clear').disabled = !picked.length;
+  }
+  function buildGrid(list) {
+    $('grid').innerHTML = '';
+    list.forEach(c => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'c'; b.dataset.k = c.key; b.style.setProperty('--c', c.hex);
+      b.innerHTML = '<i class="sw"></i><span class="t"><span>' + c.de + '</span><small>' + c.en + '</small></span><em class="n"></em>';
+      b.addEventListener('click', () => { if (picked.length < MAX_PICK) { picked.push(c.key); renderPick(); } });
+      $('grid').appendChild(b);
+    });
+    renderPick();
+  }
+
+  // ---------- iPad: step 2, place the star ----------
+  function go(step) {
+    $('step1').hidden = step !== 1;
+    $('sky').hidden = $('placebar').hidden = $('hint').hidden = step !== 2;
+    if (step === 2) { placed = sending = false; prev = { x: .5, y: .5 }; resize(); }
+  }
+  if (MODE === 'ipad') {
+    const setP = e => {
+      const r = sky.getBoundingClientRect();
+      prev.x = Math.min(.96, Math.max(.04, (e.clientX - r.left) / r.width));
+      prev.y = Math.min(.94, Math.max(.06, (e.clientY - r.top) / r.height));
+      $('hint').hidden = true;
+    };
+    let down = false;
+    sky.addEventListener('pointerdown', e => { down = true; sky.setPointerCapture(e.pointerId); setP(e); });
+    sky.addEventListener('pointermove', e => { if (down) setP(e); });
+    ['pointerup', 'pointercancel'].forEach(t => sky.addEventListener(t, () => down = false));
+    $('undo').onclick = () => { picked.pop(); renderPick(); };
+    $('clear').onclick = () => { picked = []; renderPick(); };
+    $('next').onclick = () => { if (picked.length) go(2); };
+    $('back').onclick = () => go(1);
+    $('place').onclick = () => {
+      if (sending || !picked.length) return;
+      sending = placed = true;
+      socket.emit('star:add', { colours: picked.slice(), x: prev.x, y: prev.y });
+      $('placebar').hidden = true; $('done').hidden = false;
+      setTimeout(() => { $('done').hidden = true; picked = []; renderPick(); go(1); }, 3500);
+    };
+  }
+
+  // ---------- connection ----------
+  const hud = () => {
+    if (MODE !== 'screen') return;
+    $('count').hidden = false; $('count').textContent = stars.length + ' Sterne';
+    $('empty').hidden = stars.length > 0;
+  };
+  socket.on('stars:init', a => { stars = a.map(s => ({ ...s, t0: -1e9 })); hud(); });
+  socket.on('star:added', s => { stars.push({ ...s, t0: performance.now() }); hud(); });
+  socket.on('connect', () => $('net').hidden = true);
+  socket.on('disconnect', () => $('net').hidden = false);
+
+  // ---------- iPad Safari: no zoom, no menus ----------
+  ['gesturestart', 'gesturechange', 'contextmenu'].forEach(t => document.addEventListener(t, e => e.preventDefault()));
+
+  // ---------- start ----------
+  fetch('/api/colours').then(r => r.json()).then(c => {
+    const list = Array.isArray(c) ? c : Object.entries(c).map(([key, v]) => ({ key, ...v }));
+    list.forEach(x => HEX[x.key] = x.hex);
+    if (MODE === 'ipad') buildGrid(list);
+  });
+  if (MODE === 'ipad') go(1);
+  else if (MODE === 'screen') { sky.hidden = false; resize(); hud(); }
+  else $('chooser').hidden = false;
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
